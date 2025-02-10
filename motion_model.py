@@ -143,5 +143,5 @@ if __name__ == "__main__":
     #plot the data and the fitted curve
     curve = CurveFitter(PROJECT_PATH + '/data/position_13.csv')
     a_val, b_val = curve.fit_curve(7, equation_type='laminar')
-    curve.plot_curve(5, a_val=0, equation_type='laminar')
+    curve.plot_curve(5, a_val=a_val, b_val=b_val, equation_type='laminar')
     #curve.plot_curve(9, 1, 0.3)

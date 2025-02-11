@@ -38,33 +38,6 @@ def segment_puck_trajectory(x, y, t, velocity_threshold=2.0, buffer=3):
         elif i in collision_indices_buffer and i-1 not in collision_indices_buffer:
             trajectories.append(trajectory)
             trajectory = []
-
-    
-    # # Add buffer region
-    # split_indices = set()
-    # for idx in collision_indices:
-    #     split_indices.update(range(max(0, idx - buffer), min(len(x) - 1, idx + buffer)))
-    # split_indices = sorted(split_indices)
-    
-    # # Split trajectory into segments
-    # segments = []
-
-    # start = 0
-    # for idx in split_indices:
-    #     if idx > start:
-    #         segments.append((x[start:idx], y[start:idx], t[start:idx]))
-    #     start = idx + 1
-    # if start < len(x):
-    #     segments.append((x[start:], y[start:], t[start:]))
-    
-    # # Compute distance traveled for each segment
-    # distance_segments = []
-    # for x_seg, y_seg, t_seg in segments:
-    #     dx = np.diff(x_seg, prepend=x_seg[0])
-    #     dy = np.diff(y_seg, prepend=y_seg[0])
-    #     dt = np.diff(t_seg, prepend=t_seg[0])
-    #     distances = np.sqrt(dx**2 + dy**2)
-    #     distance_segments.append(distances)
     
     return trajectories
 

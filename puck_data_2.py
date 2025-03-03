@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from matplotlib import pyplot as plt
 
-def segment_puck_trajectory(x, y, t, accel_threshold=2.0, buffer=3):
+def segment_puck_trajectory(x, y, t, velocity_threshold=0.5, buffer=3):
     """
     Segments the puck trajectory based on sudden velocity changes and computes distance traveled.
     
@@ -36,17 +37,64 @@ def segment_puck_trajectory(x, y, t, accel_threshold=2.0, buffer=3):
         if i not in collision_indices_buffer:
             trajectory.append((x[i], y[i], t[i]))
         elif i in collision_indices_buffer and i-1 not in collision_indices_buffer:
-            trajectories.append(trajectory)
+            if len(trajectory) > 1:
+                trajectories.append(np.array(trajectory))
             trajectory = []
     trajectories.append(trajectory)
     trajectory = []
 
     return trajectories
 
-PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 
-data = pd.read_csv(PROJECT_PATH + '/data/position_13.csv')
-print("a")
+def compute_v0(trajectory):
+    """
+    Computes the initial velocity from a trajectory segment.
+    
+    Parameters:
+    trajectory (np.ndarray): Trajectory segment with columns [x, y, t].
+    
+    Returns:
+    float: Initial velocity.
+    """
+    x0, y0, _ = trajectory[0]
+    x1, y1, t1 = trajectory[1]
+    return np.sqrt((x1 - x0)**2 + (y1 - y0)**2) / (t1)
 
-distance_sesegments = segment_puck_trajectory(data['x'], data['y'], data['dt'], accel_threshold=2.0, buffer=3)
-print("a")
+def get_time_array(trajectory):
+    """
+    Extracts the time array from a trajectory segment. And turns it into an elapsed time array.
+    (ie like linspace)
+    
+    Parameters:
+    trajectory (np.ndarray): Trajectory segment with columns [x, y, t].
+    
+    Returns:
+    np.ndarray: Cumulative Time array.
+    """
+    dts = trajectory[:, 2]
+    return np.cumsum(dts)
+
+def plot_segments(segments):
+    """
+    Plots the trajectory segments.
+    
+    Parameters:
+    segments (list of np.ndarray): List of trajectory segments.
+    """
+    plt.figure(figsize=(10, 6))
+    for segment in segments:
+        plt.plot(segment[:, 0], segment[:, 1], 'o-')
+    plt.xlabel("X")
+    plt.ylabel("Y")
+    plt.title("Puck Trajectory Segments")
+    plt.legend(range(len(segments)))
+    plt.show()
+
+
+if __name__ == "__main__":
+    PROJECT_PATH = str(Path(__file__).resolve().parents[0])
+
+    data = pd.read_csv(PROJECT_PATH + '/data/position_15.csv')
+    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], velocity_threshold=0.1, buffer=0)
+    plot_segments(distance_segments)
+    

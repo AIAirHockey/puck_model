@@ -135,5 +135,4 @@ def visualize_segments(datacsv):
     plt.show()
 
 if __name__ == "__main__":
-    position_plot(f"{PROJECT_PATH}/data/position_9.csv")
-    visualize_segments(f"{PROJECT_PATH}/data/position_9.csv")
+    visualize_segments(f"{PROJECT_PATH}/data/position_10.csv")

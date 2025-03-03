@@ -92,4 +92,4 @@ def visualize_segments(datacsv):
     plt.show()
 
 if __name__ == "__main__":
-    visualize_segments(f"{PROJECT_PATH}/data/position_13.csv")
+    visualize_segments(f"{PROJECT_PATH}/data/position_10.csv")

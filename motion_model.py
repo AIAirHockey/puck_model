@@ -1,147 +1,175 @@
-"""Script to find coefficients for an ODE solution for the motion of the puck on the air table."""
-
-from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+import pandas as pd
+from scipy.integrate import solve_ivp
 from scipy.optimize import curve_fit
-import sympy as sp
-import analyze_puck_data as analyze_data
+from puck_data_2 import segment_puck_trajectory, compute_v0, get_time_array
 
 
 PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 
-
-# Solving an ODE of the form x'' = -f/m -d/m (x')^2, x is position, m is mass, f is kinetic friction, d is air resistance
-#first combine f/m, d/m into single constants a, b
-#ODE becomes x'' = -a - b(x')^2
-#plug into wolfram alpha to get x(t) and x'(t)
-
-
-class CurveFitter:
-    """Class to fit the data to a curve and solve for the ODE parameters"""
-
-    def __init__(self, datacsvpath):
-        self.datacsvpath = datacsvpath
-        self.sa, self.sb, self.sc1, self.sc2, self.st = sp.symbols('a b c_1 c_2 t')
-        self.datasegments = analyze_data.segment_data(datacsvpath)
-        self.a = 0
-        self.b = 0
-
-        self.x_turbulent_sp = sp.log(sp.cos(sp.sqrt(self.sa)*sp.sqrt(self.sb)*(self.st+self.sc1)))/self.sb + self.sc2
-        self.x_prime_turbulent_sp = -self.sa*sp.tan(sp.sqrt(self.sa)*sp.sqrt(self.sb)*(self.st+self.sc1))/sp.sqrt(self.sa*self.sb)
-        self.x_laminar_sp = -self.sa*self.st/self.sb + self.sc1*sp.exp(-self.sb*self.st)/self.sb + self.sc2
-        self.x_prime_laminar_sp = self.sa/self.sb - self.sc1*sp.exp(-self.sb*self.st)
-
-
-    def solve_ICs(self, collision_num, equation_type='turbulent'):
-        """Fit the data to the ODE solution"""
-        if equation_type == 'turbulent':
-            x = self.x_turbulent_sp
-            x_prime = self.x_prime_turbulent_sp
-        else:
-            x = self.x_laminar_sp
-            x_prime = self.x_prime_laminar_sp
-
-        # Select a single segment (e.g., segment 1)
-        segment = self.datasegments[self.datasegments['collision'] == collision_num]
-
-        #the initial values right after the collision
-        x0 = round(segment['y'].iloc[0],3)
-        print(segment['vy'].iloc[0])
-        print(segment['y'].iloc[0])
-        x_prime0 = round(segment['vy'].iloc[0],3)
-        # x_prime0 = 0
-
-        eq1 = sp.Eq(x.subs(self.st, 0), x0)      # x(0) = x0
-        eq2 = sp.Eq(x_prime.subs(self.st, 0), x_prime0) # x'(0) = x'0
-        print(eq1)
-        print(eq2)
-        # Solve for c1 and c2
-        if equation_type == 'turbulent':
-            solution = sp.solve((eq1, eq2), (self.sc1, self.sc2))[0]
-            sc1_sol = solution[0]
-            sc2_sol = solution[1]
-        else :
-            solution = sp.solve((eq1, eq2), (self.sc1, self.sc2))
-            sc1_sol = solution[self.sc1]
-            sc2_sol = solution[self.sc2]
-        c1_func = sp.lambdify((self.sa, self.sb), sc1_sol, 'numpy')
-        c2_func = sp.lambdify((self.sa, self.sb), sc2_sol, 'numpy')
-        return c1_func, c2_func
-
-    def fit_curve(self, collision_num, equation_type='turbulent'):
-        """Fit the data to a single segment of puck motion
-        
-        :param collision_num: the segment number to fit
-        :param equation_type: the type of ODE to fit to, either 'turbulent' or 'laminar'
-        :return: the fitted parameters a and b"""
-        c1_func, c2_func = self.solve_ICs(collision_num, equation_type)
-        # Define the function for x(t) to fit, using the solved c1 and c2
-        if equation_type == 'turbulent':
-            def x_func(t, a, b):
-                c1_value = c1_func(a, b)
-                c2_value = c2_func(a, b)
-                return np.log(np.cos(np.sqrt(a)*np.sqrt(b)*(t+c1_value)))/b + c2_value
-        else:
-            def x_func(t, a, b):
-                c1_value = c1_func(a, b)
-                c2_value = c2_func(a, b)
-                return -a*t/b + c1_value*np.exp(-b*t)/b + c2_value
-
-        # Prepare the data for fitting
-        segment = self.datasegments[self.datasegments['collision'] == collision_num]
-        t_data = segment['dt'].cumsum().values
-        x_data = segment['y'].values
-
-        # Initial guess for the parameters [a, b]
-        initial_guess = [0.1, 1]
-
-        # Fit the function to the data
-        params, _ = curve_fit(x_func, t_data, x_data, p0=initial_guess)
-        self.a = params[0]
-        self.b = params[1]
-
-        # Print the fitted parameters
-        return params
+def ode_model(t, y, a, b):
+    """
+    Defines the ODE system:
+      y[0] = x (displacement)
+      y[1] = x_dot (velocity)
     
-    def plot_curve(self, collision_num, a_val=None, b_val=None, equation_type='turbulent'):
-        """Plot the data and the fitted curve for a single segment of puck motion
-        
-        :param collision_num: the segment number to plot
-        :param a_val: the value of the parameter a to use in the fitted curve
-        :param b_val: the value of the parameter b to use in the fitted curve
-        :param equation_type: the type of ODE to fit to, either 'turbulent' or 'laminar'"""
-        if a_val is None:
-            a_val = self.a
-        if b_val is None:
-            b_val = self.b
-        c1_func, c2_func = self.solve_ICs(collision_num, equation_type)
-        
-        if equation_type == 'turbulent':
-            def x_func(t, a, b):
-                c1_value = c1_func(a, b)
-                c2_value = c2_func(a, b)
-                return np.log(np.cos(np.sqrt(a)*np.sqrt(b)*(t+c1_value)))/b + c2_value
-        else:
-            def x_func(t, a, b):
-                c1_value = c1_func(a, b)
-                c2_value = c2_func(a, b)
-                return -a*t/b + c1_value*np.exp(-b*t)/b + c2_value
+    The system is:
+      dx/dt = x_dot
+      d(x_dot)/dt = -a - b*(x_dot)**2
+    """
+    return [y[1], -a - b*(y[1]**2)]
 
-        #plot the data and the fitted curve
-        data = analyze_data.segment_data(self.datacsvpath)
-        segment = data[data['collision'] == collision_num]
-        t_data = segment['dt'].cumsum().values
-        x_data = segment['y'].values
-        plt.plot(t_data, x_data, label='Data')
-        plt.plot(t_data, x_func(t_data, a_val, b_val), label='Fitted function')
-        plt.legend(loc='best')
-        plt.show()
+def integrate_model(t, a, b, v0):
+    """
+    Solves the ODE from t[0] to t[-1] with initial conditions x(0)=0, x'(0)=v0.
+    
+    Parameters:
+      t  : array of time points
+      a  : coefficient from the ODE
+      b  : coefficient from the ODE
+      v0 : initial velocity
+      
+    Returns:
+      x : displacement values computed at the times in t.
+    """
+    sol = solve_ivp(ode_model, (t[0], t[-1]), [0, v0], args=(a, b), t_eval=t, method='RK45', max_step=0.1, rtol=1e-2, atol=1e-5)
 
+    if sol.status != 0:
+        print(f"Warning: solve_ivp did not successfully integrate over the entire range. Status: {sol.status}")
+    print(f"integrate_model: t length = {len(t)}, sol.y[0] length = {len(sol.y[0])}")
+    return sol.y[0]
+
+def fit_trajectory(time, positions, v0):
+    """
+    Fits the ODE model to experimental trajectory data.
+    
+    Parameters:
+      time      : array of time points corresponding to the data.
+      positions : Nx2 array (or list) of [x, y] positions.
+      v0        : initial velocity (given separately).
+      
+    Process:
+      - Shifts the experimental positions so that the start is at (0,0).
+      - Computes the displacement (Euclidean distance from start) at each time.
+      - Uses curve_fit to determine best-fit parameters a and b by comparing
+        the integrated model solution to the experimental displacement.
+        
+    Returns:
+      fitted_a       : best-fit parameter a
+      fitted_b       : best-fit parameter b
+      displacement   : experimental displacement (shifted so that x(0)=0)
+      fitted_traj    : displacement computed from the fitted model.
+    """
+    positions = np.array(positions)
+    # Shift positions so that the initial position is at the origin.
+    shifted = positions - positions[0]
+    # Compute the displacement (magnitude)
+    displacement = np.sqrt(shifted[:,0]**2 + shifted[:,1]**2)
+    
+    # Debugging prints
+    print(f"time length: {len(time)}")
+    print(f"displacement length: {len(displacement)}")
+    
+    def model_for_fit(t, a, b):
+        # Integrate over the full time array
+        full_model = integrate_model(time, a, b, v0)
+        # Debugging prints
+        print(f"full_model length: {len(full_model)}")
+        print(f"full_model: {full_model}")
+        # Interpolate the integrated model at the t values provided
+        interpolated_model = np.interp(t, time, full_model)
+        print(f"interpolated_model length: {len(interpolated_model)}")
+        return interpolated_model
+    
+    # Initial guess for a and b
+    p0 = [0.1, 1.0]
+    
+    # Now, curve_fit will call model_for_fit with various t arrays,
+    # and the interpolation ensures the output always matches t's shape.
+    popt, _ = curve_fit(model_for_fit, time, displacement, p0=p0)
+    fitted_a, fitted_b = popt
+    
+    # Get the full fitted trajectory using the best-fit parameters.
+    fitted_traj = integrate_model(time, fitted_a, fitted_b, v0)
+    
+    return fitted_a, fitted_b, displacement, fitted_traj
+
+def generate_noisy_trajectory(a, b, v0, t, noise_mean=0.0, noise_std=0.2):
+    """
+    Generates a trajectory from the ODE x'' = -a - b*(x')^2 with initial conditions
+    x(0)=0 and x'(0)=v0, and then adds normally distributed noise to each point.
+    
+    Parameters:
+      a         : coefficient from the ODE.
+      b         : coefficient from the ODE.
+      v0        : initial velocity.
+      t         : array of time points at which to compute the solution.
+      noise_mean: mean of the normal noise.
+      noise_std : standard deviation of the normal noise.
+      
+    Returns:
+      noisy_x   : the trajectory with added noise.
+    """
+    true_traj = integrate_model(t, a, b, v0)
+    noise = np.random.normal(noise_mean, noise_std, size=true_traj.shape)
+    return true_traj + noise
 
 if __name__ == "__main__":
-    #plot the data and the fitted curve
-    curve = CurveFitter(PROJECT_PATH + '/data/position_13.csv')
-    a_val, b_val = curve.fit_curve(7, equation_type='laminar')
-    curve.plot_curve(5, a_val=a_val, b_val=b_val, equation_type='laminar')
-    #curve.plot_curve(9, 1, 0.3)
+    # -----------------------
+    # Example demonstration:
+    # -----------------------
+    
+    # Define true parameters for synthetic data generation.
+    true_a = 0.001
+    true_b = 3
+    true_v0 = 3.0  # initial velocity
+    
+    # Generate a set of time points (for example, 10 seconds sampled 100 times)
+    t = np.linspace(0, 1, 100)
+    
+    # Generate a synthetic trajectory with noise using the true parameters.
+    # Here we only simulate motion in one direction (y remains 0), so the positions
+    # are taken as (noisy displacement, 0).
+    noisy_traj = generate_noisy_trajectory(true_a, true_b, true_v0, t, noise_mean=0, noise_std=0.03)
+    positions = np.column_stack((noisy_traj, np.zeros_like(noisy_traj)))
+
+
+    puck_data = pd.read_csv(PROJECT_PATH + '/data/position_11.csv')
+    segment_number = 4
+    segmented_positions = segment_puck_trajectory(puck_data['x'], puck_data['y'], puck_data['dt'], velocity_threshold=0.1, buffer=1)
+    v01 = compute_v0(segmented_positions[segment_number])
+    t1 = get_time_array(segmented_positions[segment_number])
+
+    xypositions = np.column_stack((segmented_positions[segment_number][:,0], segmented_positions[segment_number][:,1]))
+
+    a, b, experimental_disp, fitted_traj = fit_trajectory(t1, xypositions, v01)
+    print(f"Fitted parameters: a = {a}, b = {b}")
+
+    
+    # # Fit the model to the synthetic data.
+    # fitted_a, fitted_b, experimental_disp, fitted_traj = fit_trajectory(t, positions, true_v0)
+    
+    # print("Fitted parameters:")
+    # print("a =", fitted_a)
+    # print("b =", fitted_b)
+    
+    # # Plot the experimental (shifted) displacement and the fitted model trajectory.
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(t, experimental_disp, 'o', label="Experimental (shifted) displacement")
+    # plt.plot(t, fitted_traj, '-', label="Fitted model")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Displacement")
+    # plt.title("Air Hockey Puck Trajectory Fit")
+    # plt.legend()
+    # plt.show()
+    #fit the model to the experimental data
+    plt.figure(figsize=(10, 6))
+    plt.plot(t1, experimental_disp, 'o', label="Experimental (shifted) displacement")
+    plt.plot(t1, fitted_traj, '-', label="Fitted model")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Displacement")
+    plt.title("Air Hockey Puck Trajectory Fit")
+    plt.legend()
+    plt.show()

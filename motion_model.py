@@ -138,11 +138,12 @@ if __name__ == "__main__":
 
     puck_data = pd.read_csv(PROJECT_PATH + '/data/position_11.csv')
     segment_number = 4
-    segmented_positions = segment_puck_trajectory(puck_data['x'], puck_data['y'], puck_data['dt'], velocity_threshold=0.1, buffer=1)
+    segmented_positions = segment_puck_trajectory(puck_data['x'], puck_data['y'], puck_data['dt'], accel_threshold=0.1, buffer=1)
     v01 = compute_v0(segmented_positions[segment_number])
     t1 = get_time_array(segmented_positions[segment_number])
 
-    xypositions = np.column_stack((segmented_positions[segment_number][:,0], segmented_positions[segment_number][:,1]))
+    segment = np.array(segmented_positions[segment_number])
+    xypositions = np.column_stack((segment[:, 0], segment[:, 1]))
 
     a, b, experimental_disp, fitted_traj = fit_trajectory(t1, xypositions, v01)
     print(f"Fitted parameters: a = {a}, b = {b}")

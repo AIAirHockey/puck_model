@@ -67,7 +67,7 @@ def acceleration_plot(datacsv):
     plt.grid(True)
     plt.show()
 
-def segment_data(datacsv, accel_threshold=1.0, buffer=0):
+def segment_data(datacsv, accel_threshold=0.5, buffer=0):
     """
     Segments the puck trajectory based on sudden velocity changes and computes distance traveled.
     
@@ -135,4 +135,5 @@ def visualize_segments(datacsv):
     plt.show()
 
 if __name__ == "__main__":
-    visualize_segments(f"{PROJECT_PATH}/data/position_10.csv")
+    position_plot(f"{PROJECT_PATH}/data/position_13.csv")
+    visualize_segments(f"{PROJECT_PATH}/data/position_13.csv")

@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
 
-def segment_puck_trajectory(x, y, t, velocity_threshold=0.5, buffer=3):
+def segment_puck_trajectory(x, y, t, accel_threshold=0.5, buffer=3):
     """
     Segments the puck trajectory based on sudden velocity changes and computes distance traveled.
     
@@ -71,7 +71,7 @@ def get_time_array(trajectory):
     Returns:
     np.ndarray: Cumulative Time array.
     """
-    dts = trajectory[:, 2]
+    dts = np.array([point[2] for point in trajectory])
     return np.cumsum(dts)
 
 def plot_segments(segments):
@@ -94,7 +94,7 @@ def plot_segments(segments):
 if __name__ == "__main__":
     PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 
-    data = pd.read_csv(PROJECT_PATH + '/data/position_15.csv')
-    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], velocity_threshold=0.1, buffer=0)
+    data = pd.read_csv(PROJECT_PATH + '/data/position_13.csv')
+    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], accel_threshold=0.1, buffer=0)
     plot_segments(distance_segments)
     

@@ -40,8 +40,8 @@ def segment_puck_trajectory(x, y, t, accel_threshold=0.5, buffer=3):
             if len(trajectory) > 1:
                 trajectories.append(np.array(trajectory))
             trajectory = []
-    trajectories.append(trajectory)
-    trajectory = []
+    if len(trajectory) > 1:
+        trajectories.append(np.array(trajectory))
 
     return trajectories
 
@@ -83,7 +83,10 @@ def plot_segments(segments):
     """
     plt.figure(figsize=(10, 6))
     for segment in segments:
-        plt.plot(segment[:, 0], segment[:, 1], 'o-')
+        try:
+            plt.plot(segment[:,0], segment[:,1], 'o-')
+        except IndexError:
+            continue
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.title("Puck Trajectory Segments")
@@ -94,7 +97,7 @@ def plot_segments(segments):
 if __name__ == "__main__":
     PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 
-    data = pd.read_csv(PROJECT_PATH + '/data/position_13.csv')
-    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], accel_threshold=0.1, buffer=0)
+    data = pd.read_csv(PROJECT_PATH + '/data/position-mar-11-2.csv')
+    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], accel_threshold=1, buffer=1)
     plot_segments(distance_segments)
     

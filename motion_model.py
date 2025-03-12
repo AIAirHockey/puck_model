@@ -84,7 +84,7 @@ def fit_trajectory(time, positions, v0):
         return interpolated_model
     
     # Initial guess for a and b
-    p0 = [0.1, 1.0]
+    p0 = [0, 0]
     
     # Now, curve_fit will call model_for_fit with various t arrays,
     # and the interpolation ensures the output always matches t's shape.
@@ -136,8 +136,8 @@ if __name__ == "__main__":
     positions = np.column_stack((noisy_traj, np.zeros_like(noisy_traj)))
 
 
-    puck_data = pd.read_csv(PROJECT_PATH + '/data/position_11.csv')
-    segment_number = 4
+    puck_data = pd.read_csv(PROJECT_PATH + '/data/position-mar-11-2.csv')
+    segment_number = 10
     segmented_positions = segment_puck_trajectory(puck_data['x'], puck_data['y'], puck_data['dt'], accel_threshold=0.1, buffer=1)
     v01 = compute_v0(segmented_positions[segment_number])
     t1 = get_time_array(segmented_positions[segment_number])

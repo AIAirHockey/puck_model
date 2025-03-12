@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
 
-def segment_puck_trajectory(x, y, t, accel_threshold=0.5, buffer=3):
+def segment_puck_trajectory(datacsv, accel_threshold=0.5, buffer=3):
     """
     Segments the puck trajectory based on sudden velocity changes and computes distance traveled.
     
@@ -17,6 +17,10 @@ def segment_puck_trajectory(x, y, t, accel_threshold=0.5, buffer=3):
     Returns:
     list of np.ndarray: Segmented distance traveled arrays.
     """
+    data = pd.read_csv(datacsv)
+    x = data['x']
+    y = data['y']
+    t = data['dt']
     x, y, t = np.array(x), np.array(y), np.array(t)
     
     # Compute finite difference velocities
@@ -43,7 +47,17 @@ def segment_puck_trajectory(x, y, t, accel_threshold=0.5, buffer=3):
     if len(trajectory) > 1:
         trajectories.append(np.array(trajectory))
 
-    return trajectories
+    collisions = np.zeros(sum(len(traj) for traj in trajectories))
+    collision_idx = 0
+    i = 0
+    for traj in trajectories:
+        if i < len(trajectories) - 1:
+            collision_idx += len(traj)
+            collisions[collision_idx] = 1
+            i += 1
+    collisions = np.cumsum(collisions)
+
+    return trajectories, collisions
 
 
 def compute_v0(trajectory):
@@ -97,7 +111,7 @@ def plot_segments(segments):
 if __name__ == "__main__":
     PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 
-    data = pd.read_csv(PROJECT_PATH + '/data/position-mar-11-2.csv')
-    distance_segments = segment_puck_trajectory(data['x'], data['y'], data['dt'], accel_threshold=1, buffer=1)
+    data = PROJECT_PATH + '/data/position-mar-11-2.csv'
+    distance_segments = segment_puck_trajectory(data, accel_threshold=1, buffer=1)
     plot_segments(distance_segments)
     

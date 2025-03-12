@@ -135,10 +135,10 @@ if __name__ == "__main__":
     noisy_traj = generate_noisy_trajectory(true_a, true_b, true_v0, t, noise_mean=0, noise_std=0.03)
     positions = np.column_stack((noisy_traj, np.zeros_like(noisy_traj)))
 
-
-    puck_data = pd.read_csv(PROJECT_PATH + '/data/position-mar-11-2.csv')
-    segment_number = 10
-    segmented_positions = segment_puck_trajectory(puck_data['x'], puck_data['y'], puck_data['dt'], accel_threshold=0.1, buffer=1)
+    data_csv = PROJECT_PATH + '/data/position-mar-11-2.csv'
+    puck_data = pd.read_csv(data_csv)
+    segment_number = 12
+    segmented_positions, _ = segment_puck_trajectory(data_csv, accel_threshold=0.5, buffer=1)
     v01 = compute_v0(segmented_positions[segment_number])
     t1 = get_time_array(segmented_positions[segment_number])
 

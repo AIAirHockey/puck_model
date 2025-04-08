@@ -58,7 +58,7 @@ def objective(params, segments):
             
             # Compute the fixed initial velocity from the first five displacements and dts.
             
-            v_norm = measured[10] / np.sum(dt[:10])
+            v_norm = measured[9] / np.sum(dt[:9])
 
             predicted = model_displacement(params, times, v_norm)
             mse = np.mean((predicted - measured) ** 2)
@@ -98,10 +98,20 @@ if __name__ == "__main__":
 
     PROJECT_PATH = Path(__file__).resolve().parents[0]
     datacsv = f"{PROJECT_PATH}/data/position-mar-11-2.csv"
+    datacsv2 = f"{PROJECT_PATH}/data/mar-12-normal-1.csv"
+    datacsv3 = f"{PROJECT_PATH}/data/mar-12-normal-2.csv"
+    datacsv4 = f"{PROJECT_PATH}/data/mar-12-large-angle.csv"
+    datacsv5 = f"{PROJECT_PATH}/data/position-mar-14-1.csv"
+
     segments, _ = segment_puck_trajectory(datacsv)
-    min_length = 10
+    segments2, _ = segment_puck_trajectory(datacsv2)
+    segments3, _ = segment_puck_trajectory(datacsv3)
+    segments4, _ = segment_puck_trajectory(datacsv4)
+    segments5, _ = segment_puck_trajectory(datacsv5)
+    all_segments = segments + segments2 + segments3 + segments4 + segments5
+    min_length = 11
     results = []
-    result = optimize_parameters(segments)
+    result = optimize_parameters(all_segments)
     if result.success:
         mass, f, B = result.x
         print("Optimized parameters:")
@@ -125,7 +135,7 @@ if __name__ == "__main__":
     measured = np.sqrt(np.sum((data[1:, :2] - initial_position) ** 2, axis=1))
     
     # Compute the fixed initial velocity from the first five displacements and dts.
-    v_norm = measured[10] / np.sum(dt[:10])
+    v_norm = measured[9] / np.sum(dt[:9])
     # B_avg = 0.001
     C = getC(v_norm, B, f)
     D = getD(B, mass, f, C)

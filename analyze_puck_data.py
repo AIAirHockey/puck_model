@@ -75,12 +75,13 @@ def visualize_segments(datacsv):
     x = np.concatenate([np.array([point[0] for point in traj]) for traj in trajectories])
     y = np.concatenate([np.array([point[1] for point in traj]) for traj in trajectories])
     plt.scatter(x, y, c=collisions)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('x (m)')
+    plt.ylabel('y (m)')
     plt.title('Puck Trajectory')
+    plt.grid(True)
     plt.show()
 
 if __name__ == "__main__":
-    position_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
-    velocity_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
-    visualize_segments(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
+    # position_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
+    # velocity_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
+    visualize_segments(f"{PROJECT_PATH}/data/position_13.csv")

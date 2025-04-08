@@ -11,7 +11,7 @@ PROJECT_PATH = str(Path(__file__).resolve().parents[0])
 def calculate_restitution():
     """Calculate the restitution coefficient by comparing kinetic energy before and after wall collisions."""
     # Load the puck data
-    csv_path = f"{PROJECT_PATH}/data/position-mar-11-2.csv"
+    csv_path = f"{PROJECT_PATH}/data/position-mar-14-1.csv"
     data = pd.read_csv(csv_path)
     
     # Segment the data to identify wall collisions
@@ -82,9 +82,9 @@ def main():
     """Main function to execute the analysis."""
     restitution_values, pre_ke_vals = calculate_restitution()
     analyze_results(restitution_values)
-    plt.scatter(pre_ke_vals,restitution_values)
+    plt.scatter(np.sqrt(pre_ke_vals),restitution_values)
     plt.ylabel("Restitution Coefficient")
-    plt.xlabel("Pre-collision Kinetic Energy m/s^2")
+    plt.xlabel("Pre-collision Kinetic Energy m/s")
     plt.show()
 
 if __name__ == "__main__":

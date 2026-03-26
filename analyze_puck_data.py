@@ -84,4 +84,4 @@ def visualize_segments(datacsv):
 if __name__ == "__main__":
     # position_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
     # velocity_plot(f"{PROJECT_PATH}/data/position-mar-11-2.csv")
-    visualize_segments(f"{PROJECT_PATH}/data/position_13.csv")
+    visualize_segments(f"{PROJECT_PATH}/data/puck_movement_data2.csv")

@@ -15,7 +15,7 @@ def calculate_restitution():
     data = pd.read_csv(csv_path)
     
     # Segment the data to identify wall collisions
-    segments, _ = puck_data_2.segment_puck_trajectory(csv_path, accel_threshold=1, buffer=1)
+    segments, _ = puck_data_2.segment_puck_trajectory(csv_path, accel_threshold=1, buffer=2)
     
     restitution_values = []
     pre_ke_values = []

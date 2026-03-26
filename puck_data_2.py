@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from matplotlib import pyplot as plt
 
-def segment_puck_trajectory(datacsv, accel_threshold=0.5, buffer=3):
+def segment_puck_trajectory(datacsv, accel_threshold=0.15, buffer=3):
     """
     Segments the puck trajectory based on sudden velocity changes and computes distance traveled.
     

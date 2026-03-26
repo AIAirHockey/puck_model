@@ -184,34 +184,34 @@ def plot_results(bottom_data, top_data, collision_points, wall_types):
     # Create figure with subplots
     fig = plt.figure(figsize=(18, 10))
     
-    # 1. Normal Restitution Distribution
-    ax1 = fig.add_subplot(231)
-    bins = np.linspace(0.2, 1.2, 20)
-    if bottom_data['normal_restitution']:
-        ax1.hist(bottom_data['normal_restitution'], bins=bins, alpha=0.5, label='Bottom Wall')
-    if top_data['normal_restitution']:
-        ax1.hist(top_data['normal_restitution'], bins=bins, alpha=0.5, label='Top Wall')
-    ax1.set_xlabel('Normal Restitution Coefficient')
-    ax1.set_ylabel('Count')
-    ax1.set_title('Distribution of Normal Restitution Coefficients')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
+    # # 1. Normal Restitution Distribution
+    # ax1 = fig.add_subplot(231)
+    # bins = np.linspace(0.2, 1.2, 20)
+    # if bottom_data['normal_restitution']:
+    #     ax1.hist(bottom_data['normal_restitution'], bins=bins, alpha=0.5, label='Bottom Wall')
+    # if top_data['normal_restitution']:
+    #     ax1.hist(top_data['normal_restitution'], bins=bins, alpha=0.5, label='Top Wall')
+    # ax1.set_xlabel('Normal Restitution Coefficient')
+    # ax1.set_ylabel('Count')
+    # ax1.set_title('Distribution of Normal Restitution Coefficients')
+    # ax1.legend()
+    # ax1.grid(True, alpha=0.3)
     
-    # 2. Parallel Restitution Distribution
-    ax2 = fig.add_subplot(232)
-    bins = np.linspace(0.5, 1.5, 20)
-    if bottom_data['parallel_restitution']:
-        ax2.hist(bottom_data['parallel_restitution'], bins=bins, alpha=0.5, label='Bottom Wall')
-    if top_data['parallel_restitution']:
-        ax2.hist(top_data['parallel_restitution'], bins=bins, alpha=0.5, label='Top Wall')
-    ax2.set_xlabel('Parallel Restitution Coefficient')
-    ax2.set_ylabel('Count')
-    ax2.set_title('Distribution of Parallel Restitution Coefficients')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
+    # # 2. Parallel Restitution Distribution
+    # ax2 = fig.add_subplot(232)
+    # bins = np.linspace(0.5, 1.5, 20)
+    # if bottom_data['parallel_restitution']:
+    #     ax2.hist(bottom_data['parallel_restitution'], bins=bins, alpha=0.5, label='Bottom Wall')
+    # if top_data['parallel_restitution']:
+    #     ax2.hist(top_data['parallel_restitution'], bins=bins, alpha=0.5, label='Top Wall')
+    # ax2.set_xlabel('Parallel Restitution Coefficient')
+    # ax2.set_ylabel('Count')
+    # ax2.set_title('Distribution of Parallel Restitution Coefficients')
+    # ax2.legend()
+    # ax2.grid(True, alpha=0.3)
     
     # 3. Normal vs Parallel Restitution
-    ax3 = fig.add_subplot(233)
+    ax3 = fig.add_subplot(111)
     
     # For bottom wall, create paired data points only where both normal and parallel exist
     if bottom_data['normal_restitution'] and bottom_data['parallel_restitution']:
@@ -230,6 +230,10 @@ def plot_results(bottom_data, top_data, collision_points, wall_types):
         if bottom_normal_values and bottom_parallel_values:
             ax3.scatter(bottom_normal_values, bottom_parallel_values, 
                       alpha=0.7, label='Bottom Wall', marker='o')
+        #make the x and y axis the same size
+        ax3.set_aspect('equal', adjustable='box')
+        ax3.set_xlim(0, 1)
+        ax3.set_ylim(0, 1)
     
     # For top wall, similar approach
     if top_data['normal_restitution'] and top_data['parallel_restitution']:
@@ -255,51 +259,51 @@ def plot_results(bottom_data, top_data, collision_points, wall_types):
     ax3.legend()
     ax3.grid(True, alpha=0.3)
     
-    # 4. Restitution vs Velocity
-    ax4 = fig.add_subplot(234)
-    if bottom_data['normal_restitution']:
-        ax4.scatter(np.sqrt(bottom_data['pre_ve_values']), bottom_data['normal_restitution'], 
-                   alpha=0.7, label='Bottom Wall', marker='o')
-    if top_data['normal_restitution']:
-        ax4.scatter(np.sqrt(top_data['pre_ve_values']), top_data['normal_restitution'], 
-                   alpha=0.7, label='Top Wall', marker='x')
-    ax4.set_xlabel('Pre-collision Velocity (m/s)')
-    ax4.set_ylabel('Normal Restitution')
-    ax4.set_title('Normal Restitution vs. Velocity')
-    ax4.legend()
-    ax4.grid(True, alpha=0.3)
+    # # 4. Restitution vs Velocity
+    # ax4 = fig.add_subplot(111)
+    # if bottom_data['normal_restitution']:
+    #     ax4.scatter(np.sqrt(bottom_data['pre_ve_values']), bottom_data['normal_restitution'], 
+    #                alpha=0.7, label='Bottom Wall', marker='o')
+    # if top_data['normal_restitution']:
+    #     ax4.scatter(np.sqrt(top_data['pre_ve_values']), top_data['normal_restitution'], 
+    #                alpha=0.7, label='Top Wall', marker='x')
+    # ax4.set_xlabel('Pre-collision Velocity (m/s)')
+    # ax4.set_ylabel('Normal Restitution')
+    # ax4.set_title('Normal Restitution vs. Velocity')
+    # ax4.legend()
+    # ax4.grid(True, alpha=0.3)
     
-    # 5. Collision Locations
-    ax5 = fig.add_subplot(235)
-    for i, (x, y) in enumerate(collision_points):
-        color = 'blue' if wall_types[i] == 'bottom' else 'red'
-        ax5.scatter(x, y, color=color, alpha=0.7)
-    ax5.set_xlabel('X Position')
-    ax5.set_ylabel('Y Position')
-    ax5.set_title('Collision Locations')
-    ax5.set_xlim(0, 2)
-    ax5.set_ylim(0, 1)
-    ax5.grid(True, alpha=0.3)
+    # # 5. Collision Locations
+    # ax5 = fig.add_subplot(133)
+    # for i, (x, y) in enumerate(collision_points):
+    #     color = 'blue' if wall_types[i] == 'bottom' else 'red'
+    #     ax5.scatter(x, y, color=color, alpha=0.7)
+    # ax5.set_xlabel('X Position')
+    # ax5.set_ylabel('Y Position')
+    # ax5.set_title('Collision Locations')
+    # ax5.set_xlim(0, 2)
+    # ax5.set_ylim(0, 1)
+    # ax5.grid(True, alpha=0.3)
     
-    # 6. X-Direction Changes
-    ax6 = fig.add_subplot(236)
-    labels = ['No Change', 'Changed']
-    bottom_changes = [len(bottom_data['x_direction_change']) - sum(bottom_data['x_direction_change']), 
-                     sum(bottom_data['x_direction_change'])]
-    top_changes = [len(top_data['x_direction_change']) - sum(top_data['x_direction_change']), 
-                  sum(top_data['x_direction_change'])]
+    # # 6. X-Direction Changes
+    # ax6 = fig.add_subplot(236)
+    # labels = ['No Change', 'Changed']
+    # bottom_changes = [len(bottom_data['x_direction_change']) - sum(bottom_data['x_direction_change']), 
+    #                  sum(bottom_data['x_direction_change'])]
+    # top_changes = [len(top_data['x_direction_change']) - sum(top_data['x_direction_change']), 
+    #               sum(top_data['x_direction_change'])]
     
-    x = np.arange(len(labels))
-    width = 0.35
-    ax6.bar(x - width/2, bottom_changes, width, label='Bottom Wall')
-    ax6.bar(x + width/2, top_changes, width, label='Top Wall')
-    ax6.set_xticks(x)
-    ax6.set_xticklabels(labels)
-    ax6.set_ylabel('Count')
-    ax6.set_title('X-Velocity Direction Changes')
-    ax6.legend()
+    # x = np.arange(len(labels))
+    # width = 0.35
+    # ax6.bar(x - width/2, bottom_changes, width, label='Bottom Wall')
+    # ax6.bar(x + width/2, top_changes, width, label='Top Wall')
+    # ax6.set_xticks(x)
+    # ax6.set_xticklabels(labels)
+    # ax6.set_ylabel('Count')
+    # ax6.set_title('X-Velocity Direction Changes')
+    # ax6.legend()
     
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.show()
 
 def main():
